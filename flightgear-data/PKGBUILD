@@ -1,4 +1,6 @@
-# Maintainer: acxz <akashpatel2008 at yahoo dot com>
+# Maintainer:
+# Contributor: Alexander Fetting <deeznuts420692@proton.me>
+# Contributor: acxz <akashpatel2008 at yahoo dot com>
 # Contributor: Frederic Bezies < fredbezies at gmail dot com >
 # Contributor: Deon Spengler <deon at spengler dot co dot za>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
@@ -6,20 +8,18 @@
 # Contributor: Hans Janssen <hans@janserv.xs4all.nl>
 
 pkgname=flightgear-data
-pkgver=2020.3.19
-_pkgver=${pkgver%.*}
+pkgver=2024.1.7
 pkgrel=1
-pkgdesc="Base-Data for the opensource flight-simulator."
+pkgdesc="The FlightGear base package contains the necessary data files to run FlightGear"
 arch=('any')
-license=('GPL')
-url="http://www.flightgear.org/"
-options=(!strip)
-source=("https://downloads.sourceforge.net/project/flightgear/release-${_pkgver}/FlightGear-${pkgver}-data.txz")
-sha256sums=('f3adc49cd054fab6137711f0315e876c1bbdf653ba1f798a1aecae9a6e984795')
+url="https://gitlab.com/flightgear/fgdata"
+license=('GPL-2.0-or-later')
+depends=('bash' 'perl' 'python')
+source=("${url}/-/archive/${pkgver}/fgdata-${pkgver}.tar.gz")
+sha256sums=('9637b3c3c3de86835dd7aa08a2e8d727e35993d99271e9bab74099d4cf6d3e66')
 
 package() {
-  cd "$srcdir"
-  mkdir -p "$pkgdir"/usr/share/flightgear
-  mv fgdata/ "$pkgdir"/usr/share/flightgear/data
-  chown root:root "$pkgdir"/usr/share/flightgear/data
+    cd "fgdata-${pkgver}"
+    install -d "${pkgdir}/usr/share/flightgear/data"
+    cp -r * "${pkgdir}/usr/share/flightgear/data"
 }

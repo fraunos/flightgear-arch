@@ -1,48 +1,64 @@
-# Maintainer: acxz <akashpatel2008 at yahoo dot com>
+# Maintainer: Mahdi Sarikhani <mahdisarikhani@outlook.com>
+# Contributor: Alexander Fetting <deeznuts420692@proton.me>
+# Contributor: acxz <akashpatel2008 at yahoo dot com>
 # Contributor: Ashley Whetter <(firstname) @ awhetter.co.uk>
 # Contributor: Deon Spengler <deon at spengler dot co dot za>
 # Contributor: Sergej Pupykin <pupykin.s+arch@gmail.com>
 # Contributor: William Rea <sillywilly@gmail.com>
 # Contributor: Hans Janssen <hans@janserv.xs4all.nl>
 
-pkgname='flightgear'
-pkgver=2020.3.19
-_pkgver=${pkgver%.*}
-pkgrel=2
+pkgname=flightgear
+pkgver=2024.1.7
+pkgrel=1
 pkgdesc="An open-source, multi-platform flight simulator"
 arch=('x86_64')
-depends=('libxmu' 'libxi' 'zlib' 'openscenegraph' 'libxrandr' 'glu' 'openal')
-makedepends=('boost' 'cmake' 'mesa' 'sharutils' "simgear>=${pkgver}" 'qt5-base' 'qt5-declarative' 'qt5-svg')
-optdepends=('qt5-base: fgfs --launcher'
-            'qt5-declarative: fgfs --launcher'
-            'flightgear-data')
-license=("GPL")
-url="http://www.flightgear.org/"
-source=("http://downloads.sourceforge.net/project/flightgear/release-${_pkgver}/${pkgname}-${pkgver}.tar.bz2")
-sha256sums=('167d08de9cc0f72218b379b23cd7e56c7f6ee18d7d559512da51a3bd67f38e6e')
+url="https://www.flightgear.org"
+license=("GPL-2.0-or-later")
+depends=('dbus'
+         'glibc'
+         'gsm'
+         'hicolor-icon-theme'
+         'libevent'
+         'libgcc'
+         'libglvnd'
+         'libstdc++'
+         'libx11'
+         'openal'
+         'openscenegraph'
+         'qt6-base'
+         'qt6-declarative'
+         'simgear'
+         'speex'
+         'speexdsp'
+         'sqlite'
+         'systemd-libs'
+         'zlib')
+makedepends=('boost' 'cmake' 'plib' 'qt6-svg' 'qt6-tools')
+optdepends=('flightgear-data: Base data package')
+source=("https://gitlab.com/flightgear/flightgear/-/archive/${pkgver}/${pkgname}-${pkgver}.tar.gz")
+sha256sums=('b1e6d621c93e00a9374dcaca0260006f80731191c3195f3077de7f80a5e65b96')
 
 prepare() {
-  cd "$srcdir"/flightgear-$pkgver
-  sed -i 's|Exec=.*|Exec=fgfs --fg-root=/usr/share/flightgear/data|' package/org.flightgear.FlightGear.desktop
+    cd "${pkgname}-${pkgver}"
+    sed -i 's|Exec=\(.*\)|Exec=\1 --fg-root=/usr/share/flightgear/data|' package/org.flightgear.FlightGear.desktop.in
 }
 
 build() {
-  mkdir -p "$srcdir"/fgbuild
-  cd "$srcdir"/fgbuild
-  cmake \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DFG_DATA_DIR:STRING="/usr/share/flightgear/data" \
-    ../flightgear-$pkgver
-  make
+    local cmake_options=(
+        -B build
+        -D CMAKE_BUILD_TYPE=Release
+        -D CMAKE_INSTALL_PREFIX=/usr
+        -D CHECK_FOR_QT5=OFF
+        -D ENABLE_CCACHE=ON
+        -D FG_DATA_DIR=/usr/share/flightgear/data
+        -D SYSTEM_SQLITE=ON
+        -S "${pkgname}-${pkgver}"
+    )
+    cmake "${cmake_options[@]}"
+    cmake --build build
 }
 
 package() {
-  cd "$srcdir"/fgbuild
-  make DESTDIR=${pkgdir} install
-
-  cd "$srcdir"/flightgear-$pkgver
-  install -Dm0644 package/flightgear.ico "$pkgdir"/usr/share/icons/flightgear.ico
-  install -Dm0644 scripts/completion/fg-completion.bash "$pkgdir"/usr/share/bash-completion/completions/fgfs
-  install -Dm0644 scripts/completion/fg-completion.zsh "$pkgdir"/usr/share/zsh/site-functions/_fgfs
-  ln -sf flightgear "$pkgdir"/usr/share/FlightGear
+    DESTDIR="${pkgdir}" cmake --install build
+    rm -r "${pkgdir}/usr/appdir"
 }
